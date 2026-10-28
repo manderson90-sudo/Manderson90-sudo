@@ -1,7 +1,10 @@
 /* =========================================
-   MICHAEL ANDERSON PORTFOLIO
-   NAVIGATION + RECOMMENDATIONS
+   MICHAEL ANDERSON
+   TECHNOLOGY LEADERSHIP PORTFOLIO
+
+   Navigation + Recommendations Carousel
 ========================================= */
+
 
 /* =========================================
    FULL-SCREEN NAVIGATION
@@ -14,6 +17,8 @@ const closeButton = document.querySelector(".menu-close");
 let previousFocus = null;
 
 function openMenu() {
+  if (!menu || !menuButton) return;
+
   previousFocus = document.activeElement;
 
   menu.hidden = false;
@@ -26,10 +31,16 @@ function openMenu() {
 
   document.body.classList.add("menu-open");
 
-  closeButton.focus();
+  stopAutoCycle();
+
+  if (closeButton) {
+    closeButton.focus();
+  }
 }
 
 function closeMenu(restoreFocus = true) {
+  if (!menu || !menuButton) return;
+
   menu.hidden = true;
 
   menuButton.setAttribute("aria-expanded", "false");
@@ -43,28 +54,36 @@ function closeMenu(restoreFocus = true) {
   if (restoreFocus && previousFocus) {
     previousFocus.focus({ preventScroll: true });
   }
+
+  startAutoCycle();
 }
 
-menuButton.addEventListener("click", () => {
-  if (menu.hidden) {
-    openMenu();
-  } else {
-    closeMenu();
-  }
-});
-
-closeButton.addEventListener("click", () => {
-  closeMenu();
-});
-
-menu.querySelectorAll("a").forEach((link) => {
-  link.addEventListener("click", () => {
-    closeMenu(false);
+if (menuButton && menu) {
+  menuButton.addEventListener("click", () => {
+    if (menu.hidden) {
+      openMenu();
+    } else {
+      closeMenu();
+    }
   });
-});
+}
+
+if (closeButton) {
+  closeButton.addEventListener("click", () => {
+    closeMenu();
+  });
+}
+
+if (menu) {
+  menu.querySelectorAll("a").forEach((link) => {
+    link.addEventListener("click", () => {
+      closeMenu(false);
+    });
+  });
+}
 
 document.addEventListener("keydown", (event) => {
-  if (menu.hidden) return;
+  if (!menu || menu.hidden) return;
 
   if (event.key === "Escape") {
     closeMenu();
@@ -77,6 +96,8 @@ document.addEventListener("keydown", (event) => {
         'a[href], button:not([disabled])'
       )
     );
+
+    if (!focusable.length) return;
 
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
@@ -95,10 +116,11 @@ document.addEventListener("keydown", (event) => {
       first.focus();
     }
   }
-});
+}
+
 
 /* =========================================
-   FIVE RECOMMENDATIONS
+   RECOMMENDATIONS
 ========================================= */
 
 const recommendations = [
@@ -107,7 +129,8 @@ const recommendations = [
     quote:
       "He built our Applications & Digital Development team from scratch, taking the initial brief as to how I expected it to add value to the Club and turned it into a function the wider organisation now genuinely relies on.",
     name: "Daniel Bailey",
-    role: "Head of Technology, Newcastle United Football Club",
+    role:
+      "Head of Technology, Newcastle United Football Club",
     relationship: "Former direct manager"
   },
 
@@ -116,7 +139,8 @@ const recommendations = [
     quote:
       "What really sets Michael apart is his leadership style; he is highly personable and emotionally intelligent, and adapts his approach to suit the needs of different direct reports.",
     name: "Rachel Wilson",
-    role: "IT Applications & Digital Development Manager, Newcastle United Football Club",
+    role:
+      "IT Applications & Digital Development Manager, Newcastle United Football Club",
     relationship: "Former direct report"
   },
 
@@ -125,7 +149,8 @@ const recommendations = [
     quote:
       "Michael is one of the most professional, detailed and well communicated people I have ever worked with in over 23 years and he would be a very valued team member in any business no matter what the industry.",
     name: "Martin Robinson",
-    role: "Executive Leader, Golf, Leisure & Hospitality",
+    role:
+      "Executive Leader, Golf, Leisure & Hospitality",
     relationship: "Former colleague"
   },
 
@@ -134,7 +159,8 @@ const recommendations = [
     quote:
       "His technical knowledge is outstanding, as is his ability to build effective relationships that support proactive, collaborative delivery.",
     name: "Steve Swinyard",
-    role: "Head of Safeguarding & Welfare, Newcastle United Football Club",
+    role:
+      "Head of Safeguarding & Welfare, Newcastle United Football Club",
     relationship: "Former senior colleague"
   },
 
@@ -143,10 +169,42 @@ const recommendations = [
     quote:
       "During our time together at American Golf he managed a number of successful projects with tenacity, professionalism, courtesy and a solution-focused approach.",
     name: "Scott Taylor",
-    role: "Marketing & CRM Director, American Golf",
+    role:
+      "Marketing & CRM Director, American Golf",
     relationship: "Former senior colleague"
   }
 ];
+
+
+/* =========================================
+   CAROUSEL ELEMENTS
+========================================= */
+
+const recommendationCard = document.querySelector(
+  ".recommendation-card"
+);
+
+const quoteCategory = document.querySelector(
+  ".quote-category"
+);
+
+const quoteText = document.querySelector("#quote-text");
+const quoteName = document.querySelector("#quote-name");
+const quoteRole = document.querySelector("#quote-role");
+
+const quoteRelationship = document.querySelector(
+  "#quote-relationship"
+);
+
+const quoteInitials = document.querySelector(
+  "#quote-initials"
+);
+
+const dots = document.querySelector("#quote-dots");
+
+const prevButton = document.querySelector("#prev-quote");
+const nextButton = document.querySelector("#next-quote");
+
 
 /* =========================================
    CAROUSEL SETTINGS
@@ -161,48 +219,50 @@ let current = 0;
 
 let autoTimer = null;
 let resumeTimer = null;
-let transitionTimer = null;
-let transitionEndTimer = null;
+let fadeTimer = null;
+let fadeEndTimer = null;
 let resizeTimer = null;
 
 let isTransitioning = false;
-let pauseUntil = 0;
+
 let pointerOverCard = false;
 let focusInsideCard = false;
 
+let pauseUntil = 0;
+
 let touchStartX = 0;
 let touchStartY = 0;
-
-const recommendationCard = document.querySelector(
-  ".recommendation-card"
-);
-
-const dots = document.querySelector("#quote-dots");
-const prevButton = document.querySelector("#prev-quote");
-const nextButton = document.querySelector("#next-quote");
-
-const quoteText = document.querySelector("#quote-text");
+let touchTracking = false;
 
 const reducedMotion = window.matchMedia(
   "(prefers-reduced-motion: reduce)"
 );
 
-/* =========================================
-   CAROUSEL STYLING
+const hasMouseHover = window.matchMedia(
+  "(hover: hover) and (pointer: fine)"
+);
 
-   Added automatically by JavaScript.
-   No CSS file changes required.
+
+/* =========================================
+   CAROUSEL STYLES
+
+   These are applied automatically.
+   No changes to styles.css required.
 ========================================= */
 
 const carouselStyles = document.createElement("style");
 
 carouselStyles.textContent = `
+
   .recommendation-card {
     display: flex;
     flex-direction: column;
     touch-action: pan-y;
-    -webkit-user-select: none;
-    user-select: none;
+    transition: opacity 250ms ease;
+  }
+
+  .recommendation-card.is-changing {
+    opacity: 0;
   }
 
   .recommendation-card .quote-person {
@@ -213,109 +273,95 @@ carouselStyles.textContent = `
     min-height: 0;
   }
 
-  .recommendation-card {
-    transition: opacity 250ms ease;
-  }
-
-  .recommendation-card.is-changing {
-    opacity: 0;
-  }
-
-  .recommendation-card.is-swiping {
-    cursor: grabbing;
-  }
-
-  .carousel-controls {
-    min-height: 50px;
-  }
-
   @media (prefers-reduced-motion: reduce) {
     .recommendation-card {
       transition: none !important;
     }
   }
+
 `;
 
 document.head.appendChild(carouselStyles);
+
 
 /* =========================================
    RENDER RECOMMENDATION
 ========================================= */
 
 function renderQuote() {
+  if (!recommendationCard) return;
+
   const recommendation = recommendations[current];
 
-  document.querySelector(".quote-category").textContent =
-    recommendation.category;
+  quoteCategory.textContent = recommendation.category;
 
-  quoteText.textContent =
-    recommendation.quote;
+  quoteText.textContent = recommendation.quote;
 
-  document.querySelector("#quote-name").textContent =
-    recommendation.name;
+  quoteName.textContent = recommendation.name;
 
-  document.querySelector("#quote-role").textContent =
-    recommendation.role;
+  quoteRole.textContent = recommendation.role;
 
-  document.querySelector("#quote-relationship").textContent =
+  quoteRelationship.textContent =
     recommendation.relationship;
 
-  document.querySelector("#quote-initials").textContent =
-    recommendation.name
-      .split(" ")
-      .map((part) => part[0])
-      .slice(0, 2)
-      .join("");
+  quoteInitials.textContent = recommendation.name
+    .split(" ")
+    .map((part) => part.charAt(0))
+    .slice(0, 2)
+    .join("");
 
-  const indicators = recommendations.map((_, index) => {
-    const button = document.createElement("button");
+  if (dots) {
+    const indicators = recommendations.map((_, index) => {
+      const button = document.createElement("button");
 
-    button.type = "button";
+      button.type = "button";
 
-    button.setAttribute(
-      "aria-label",
-      `Show recommendation ${index + 1}`
-    );
+      button.className =
+        index === current ? "active" : "";
 
-    button.setAttribute(
-      "aria-pressed",
-      String(index === current)
-    );
+      button.setAttribute(
+        "aria-label",
+        `Show recommendation ${index + 1}`
+      );
 
-    button.className =
-      index === current ? "active" : "";
+      button.setAttribute(
+        "aria-pressed",
+        String(index === current)
+      );
 
-    button.addEventListener("click", () => {
-      registerInteraction();
-      changeQuote(index);
+      button.addEventListener("click", () => {
+        registerInteraction();
+        changeQuote(index);
+      });
+
+      return button;
     });
 
-    return button;
-  });
-
-  dots.replaceChildren(...indicators);
-
-  prevButton.disabled = recommendations.length < 2;
-  nextButton.disabled = recommendations.length < 2;
+    dots.replaceChildren(...indicators);
+  }
 }
+
 
 /* =========================================
    KEEP ALL CARDS THE SAME HEIGHT
 ========================================= */
 
 function equaliseCardHeight() {
-  if (isTransitioning) return;
+  if (!recommendationCard || isTransitioning) return;
 
-  const savedIndex = current;
-
-  recommendationCard.style.minHeight = "0px";
+  const originalIndex = current;
 
   const originalVisibility =
     recommendationCard.style.visibility;
 
-  recommendationCard.style.visibility = "hidden";
+  const originalTransition =
+    recommendationCard.style.transition;
 
-  let tallest = 0;
+  recommendationCard.style.visibility = "hidden";
+  recommendationCard.style.transition = "none";
+  recommendationCard.style.minHeight = "0px";
+
+  let tallestHeight = 0;
 
   recommendations.forEach((_, index) => {
     current = index;
@@ -325,35 +371,41 @@ function equaliseCardHeight() {
     const height =
       recommendationCard.getBoundingClientRect().height;
 
-    tallest = Math.max(tallest, height);
+    tallestHeight = Math.max(tallestHeight, height);
   });
 
-  current = savedIndex;
+  current = originalIndex;
 
   renderQuote();
 
   recommendationCard.style.minHeight =
-    `${Math.ceil(tallest)}px`;
+    `${Math.ceil(tallestHeight)}px`;
 
   recommendationCard.style.visibility =
     originalVisibility;
+
+  recommendationCard.style.transition =
+    originalTransition;
 }
+
 
 /* =========================================
    CHANGE RECOMMENDATION
 ========================================= */
 
 function changeQuote(index) {
+  if (!recommendationCard) return;
+
   if (isTransitioning) return;
 
-  const targetIndex =
+  const nextIndex =
     (index + recommendations.length) %
     recommendations.length;
 
-  if (targetIndex === current) return;
+  if (nextIndex === current) return;
 
   if (reducedMotion.matches) {
-    current = targetIndex;
+    current = nextIndex;
     renderQuote();
     return;
   }
@@ -362,22 +414,28 @@ function changeQuote(index) {
 
   recommendationCard.classList.add("is-changing");
 
-  transitionTimer = setTimeout(() => {
-    current = targetIndex;
+  fadeTimer = setTimeout(() => {
+    current = nextIndex;
 
     renderQuote();
 
     recommendationCard.classList.remove("is-changing");
 
-    transitionEndTimer = setTimeout(() => {
+    fadeEndTimer = setTimeout(() => {
       isTransitioning = false;
     }, FADE_DURATION);
 
   }, FADE_DURATION);
 }
 
+
 /* =========================================
    AUTOMATIC CYCLING
+
+   Runs every 6 seconds.
+
+   No intersection observer.
+   No iPhone hover interference.
 ========================================= */
 
 function stopAutoCycle() {
@@ -388,15 +446,23 @@ function stopAutoCycle() {
 }
 
 function canAutoCycle() {
-  return (
-    recommendations.length > 1 &&
-    !document.hidden &&
-    !reducedMotion.matches &&
-    menu.hidden &&
-    !pointerOverCard &&
-    !focusInsideCard &&
-    Date.now() >= pauseUntil
-  );
+  if (!recommendationCard) return false;
+
+  if (recommendations.length < 2) return false;
+
+  if (document.hidden) return false;
+
+  if (reducedMotion.matches) return false;
+
+  if (menu && !menu.hidden) return false;
+
+  if (pointerOverCard) return false;
+
+  if (focusInsideCard) return false;
+
+  if (Date.now() < pauseUntil) return false;
+
+  return true;
 }
 
 function startAutoCycle() {
@@ -416,8 +482,9 @@ function startAutoCycle() {
   }, AUTO_INTERVAL);
 }
 
+
 /* =========================================
-   PAUSE AFTER USER INTERACTION
+   PAUSE AFTER INTERACTION
 ========================================= */
 
 function registerInteraction() {
@@ -431,127 +498,172 @@ function registerInteraction() {
 
   resumeTimer = setTimeout(() => {
     startAutoCycle();
-  }, INTERACTION_PAUSE + 50);
+  }, INTERACTION_PAUSE + 100);
 }
 
-/* =========================================
-   ARROW CONTROLS
-========================================= */
-
-prevButton.addEventListener("click", () => {
-  registerInteraction();
-  changeQuote(current - 1);
-});
-
-nextButton.addEventListener("click", () => {
-  registerInteraction();
-  changeQuote(current + 1);
-});
 
 /* =========================================
-   SWIPE SUPPORT FOR IPHONE / ANDROID
+   ARROW BUTTONS
 ========================================= */
 
-recommendationCard.addEventListener(
-  "touchstart",
-  (event) => {
-    if (event.touches.length !== 1) return;
-
-    touchStartX = event.touches[0].clientX;
-    touchStartY = event.touches[0].clientY;
-  },
-  { passive: true }
-);
-
-recommendationCard.addEventListener(
-  "touchend",
-  (event) => {
-    if (event.changedTouches.length !== 1) return;
-
-    const touchEndX =
-      event.changedTouches[0].clientX;
-
-    const touchEndY =
-      event.changedTouches[0].clientY;
-
-    const differenceX =
-      touchEndX - touchStartX;
-
-    const differenceY =
-      touchEndY - touchStartY;
-
-    /*
-      Only treat a gesture as a swipe
-      when horizontal movement is clearly
-      greater than vertical movement.
-    */
-
-    if (
-      Math.abs(differenceX) < SWIPE_THRESHOLD ||
-      Math.abs(differenceX) <= Math.abs(differenceY)
-    ) {
-      return;
-    }
-
+if (prevButton) {
+  prevButton.addEventListener("click", () => {
     registerInteraction();
+    changeQuote(current - 1);
+  });
+}
 
-    if (differenceX < 0) {
-      // Swipe left: next recommendation
-      changeQuote(current + 1);
-    } else {
-      // Swipe right: previous recommendation
-      changeQuote(current - 1);
-    }
-  },
-  { passive: true }
-);
+if (nextButton) {
+  nextButton.addEventListener("click", () => {
+    registerInteraction();
+    changeQuote(current + 1);
+  });
+}
+
+
+/* =========================================
+   SWIPE SUPPORT
+
+   Swipe left = next
+   Swipe right = previous
+
+   Vertical scrolling remains enabled.
+========================================= */
+
+if (recommendationCard) {
+  recommendationCard.addEventListener(
+    "touchstart",
+    (event) => {
+      if (event.touches.length !== 1) {
+        touchTracking = false;
+        return;
+      }
+
+      touchTracking = true;
+
+      touchStartX = event.touches[0].clientX;
+      touchStartY = event.touches[0].clientY;
+    },
+    { passive: true }
+  );
+
+  recommendationCard.addEventListener(
+    "touchend",
+    (event) => {
+      if (!touchTracking) return;
+
+      touchTracking = false;
+
+      if (event.changedTouches.length !== 1) return;
+
+      const touchEndX =
+        event.changedTouches[0].clientX;
+
+      const touchEndY =
+        event.changedTouches[0].clientY;
+
+      const differenceX = touchEndX - touchStartX;
+      const differenceY = touchEndY - touchStartY;
+
+      const horizontalDistance =
+        Math.abs(differenceX);
+
+      const verticalDistance =
+        Math.abs(differenceY);
+
+      if (horizontalDistance < SWIPE_THRESHOLD) {
+        return;
+      }
+
+      if (horizontalDistance <= verticalDistance) {
+        return;
+      }
+
+      registerInteraction();
+
+      if (differenceX < 0) {
+        changeQuote(current + 1);
+      } else {
+        changeQuote(current - 1);
+      }
+    },
+    { passive: true }
+  );
+
+  recommendationCard.addEventListener(
+    "touchcancel",
+    () => {
+      touchTracking = false;
+    },
+    { passive: true }
+  );
+}
+
 
 /* =========================================
    DESKTOP MOUSE HOVER
+
+   IMPORTANT:
+   Only enabled for actual mouse devices.
+
+   iPhone touches will NOT pause the timer.
 ========================================= */
 
-recommendationCard.addEventListener(
-  "mouseenter",
-  () => {
-    pointerOverCard = true;
-    stopAutoCycle();
-  }
-);
+if (recommendationCard && hasMouseHover.matches) {
+  recommendationCard.addEventListener(
+    "mouseenter",
+    () => {
+      pointerOverCard = true;
+      stopAutoCycle();
+    }
+  );
 
-recommendationCard.addEventListener(
-  "mouseleave",
-  () => {
-    pointerOverCard = false;
-    startAutoCycle();
-  }
-);
-
-/* =========================================
-   KEYBOARD FOCUS
-========================================= */
-
-recommendationCard.addEventListener(
-  "focusin",
-  () => {
-    focusInsideCard = true;
-    stopAutoCycle();
-  }
-);
-
-recommendationCard.addEventListener(
-  "focusout",
-  (event) => {
-    if (
-      !recommendationCard.contains(event.relatedTarget)
-    ) {
-      focusInsideCard = false;
+  recommendationCard.addEventListener(
+    "mouseleave",
+    () => {
+      pointerOverCard = false;
       startAutoCycle();
     }
-  }
-);
+  );
+}
+
+
+/* =========================================
+   KEYBOARD ACCESSIBILITY
+========================================= */
+
+if (recommendationCard) {
+  recommendationCard.addEventListener(
+    "focusin",
+    () => {
+      focusInsideCard = true;
+      stopAutoCycle();
+    }
+  );
+
+  recommendationCard.addEventListener(
+    "focusout",
+    (event) => {
+      if (
+        !recommendationCard.contains(
+          event.relatedTarget
+        )
+      ) {
+        focusInsideCard = false;
+        startAutoCycle();
+      }
+    }
+  );
+}
+
 
 /* =========================================
    PAGE VISIBILITY
+
+   Stops cycling when Safari is in
+   the background.
+
+   Restarts when the user returns.
 ========================================= */
 
 document.addEventListener(
@@ -560,27 +672,31 @@ document.addEventListener(
     if (document.hidden) {
       stopAutoCycle();
     } else {
+      pointerOverCard = false;
       startAutoCycle();
     }
   }
 );
 
+
 /* =========================================
-   REDUCED MOTION
+   REDUCED MOTION ACCESSIBILITY
 ========================================= */
 
 function handleMotionPreference() {
   if (reducedMotion.matches) {
     stopAutoCycle();
 
-    clearTimeout(transitionTimer);
-    clearTimeout(transitionEndTimer);
+    clearTimeout(fadeTimer);
+    clearTimeout(fadeEndTimer);
 
     isTransitioning = false;
 
-    recommendationCard.classList.remove(
-      "is-changing"
-    );
+    if (recommendationCard) {
+      recommendationCard.classList.remove(
+        "is-changing"
+      );
+    }
   } else {
     startAutoCycle();
   }
@@ -597,8 +713,9 @@ if (reducedMotion.addEventListener) {
   );
 }
 
+
 /* =========================================
-   RECALCULATE HEIGHT WHEN SCREEN RESIZES
+   RECALCULATE HEIGHT ON RESIZE
 ========================================= */
 
 window.addEventListener("resize", () => {
@@ -606,30 +723,47 @@ window.addEventListener("resize", () => {
 
   resizeTimer = setTimeout(() => {
     if (isTransitioning) {
-      resizeTimer = setTimeout(
-        equaliseCardHeight,
-        FADE_DURATION * 2 + 100
-      );
+      resizeTimer = setTimeout(() => {
+        equaliseCardHeight();
+      }, FADE_DURATION * 2 + 100);
     } else {
       equaliseCardHeight();
     }
   }, 200);
 });
 
+
 /* =========================================
-   INITIALISE
+   INITIALISE CAROUSEL
 ========================================= */
 
-renderQuote();
+if (recommendationCard) {
+  renderQuote();
 
-if (document.fonts && document.fonts.ready) {
-  document.fonts.ready.then(() => {
-    equaliseCardHeight();
-  });
-} else {
   equaliseCardHeight();
+
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(() => {
+      equaliseCardHeight();
+    });
+  }
+
+  window.addEventListener("load", () => {
+    equaliseCardHeight();
+
+    pointerOverCard = false;
+    focusInsideCard = false;
+
+    startAutoCycle();
+  });
+
+  /*
+    Start immediately as well.
+
+    This ensures the timer works whether
+    the script loads before or after the
+    page has finished loading.
+  */
+
+  startAutoCycle();
 }
-
-window.addEventListener("load", equaliseCardHeight);
-
-startAutoCycle();
