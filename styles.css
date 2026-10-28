@@ -1230,3 +1230,19 @@ h3 {
     animation: none !important;
   }
 }
+
+/* Force clean, non-emoji arrows throughout the website */
+
+.button-arrow {
+  font-family: "Helvetica Neue", Arial, sans-serif !important;
+  font-variant-emoji: text;
+  font-size: 16px !important;
+  font-weight: 400 !important;
+  line-height: 1;
+  color: inherit;
+  opacity: 0.8;
+}
+
+.button-arrow::after {
+  content: none !important;
+}
