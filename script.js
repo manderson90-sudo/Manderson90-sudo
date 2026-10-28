@@ -84,11 +84,10 @@ document.addEventListener("keydown", (event) => {
 });
 
 /* =========================================
-   RECOMMENDATIONS CAROUSEL
+   RECOMMENDATIONS
 ========================================= */
 
 const recommendations = [
-
   {
     category: "TECHNOLOGY LEADERSHIP",
     quote:
@@ -133,21 +132,43 @@ const recommendations = [
     role: "Marketing & CRM Director, American Golf",
     relationship: "Former senior colleague"
   }
-
 ];
 
 /* =========================================
-   CAROUSEL FUNCTIONALITY
+   CAROUSEL SETTINGS
 ========================================= */
 
+const AUTO_INTERVAL = 6000;
+const INTERACTION_PAUSE = 15000;
+const FADE_DURATION = 300;
+
 let current = 0;
+
+let autoTimer = null;
+let interactionTimer = null;
+let fadeTimer = null;
+
+let carouselVisible = false;
+let isTransitioning = false;
+let userInteracting = false;
+
+const recommendationCard = document.querySelector(
+  ".recommendation-card"
+);
 
 const dots = document.querySelector("#quote-dots");
 const prevButton = document.querySelector("#prev-quote");
 const nextButton = document.querySelector("#next-quote");
 
-function renderQuote() {
+const reducedMotion = window.matchMedia(
+  "(prefers-reduced-motion: reduce)"
+);
 
+/* =========================================
+   RENDER RECOMMENDATION
+========================================= */
+
+function renderQuote() {
   const recommendation = recommendations[current];
 
   document.querySelector(".quote-category").textContent =
@@ -173,7 +194,6 @@ function renderQuote() {
       .join("");
 
   const indicators = recommendations.map((_, index) => {
-
     const button = document.createElement("button");
 
     button.type = "button";
@@ -188,47 +208,220 @@ function renderQuote() {
       String(index === current)
     );
 
-    button.className =
-      index === current ? "active" : "";
+    button.className = index === current ? "active" : "";
 
     button.addEventListener("click", () => {
-      current = index;
-      renderQuote();
+      registerInteraction();
+      changeQuote(index);
     });
 
     return button;
-
   });
 
   dots.replaceChildren(...indicators);
 
   prevButton.disabled = recommendations.length < 2;
   nextButton.disabled = recommendations.length < 2;
+}
 
+/* =========================================
+   FADE TRANSITION
+========================================= */
+
+recommendationCard.style.transition =
+  `opacity ${FADE_DURATION}ms ease`;
+
+function changeQuote(index) {
+  if (isTransitioning) return;
+
+  if (index === current) return;
+
+  if (reducedMotion.matches) {
+    current = index;
+    renderQuote();
+    return;
+  }
+
+  isTransitioning = true;
+
+  recommendationCard.style.opacity = "0";
+
+  fadeTimer = setTimeout(() => {
+    current = index;
+
+    renderQuote();
+
+    recommendationCard.style.opacity = "1";
+
+    fadeTimer = setTimeout(() => {
+      isTransitioning = false;
+    }, FADE_DURATION);
+
+  }, FADE_DURATION);
+}
+
+/* =========================================
+   AUTOMATIC CYCLING
+========================================= */
+
+function stopAutoCycle() {
+  if (autoTimer !== null) {
+    clearInterval(autoTimer);
+    autoTimer = null;
+  }
+}
+
+function startAutoCycle() {
+  stopAutoCycle();
+
+  if (
+    recommendations.length < 2 ||
+    !carouselVisible ||
+    userInteracting ||
+    reducedMotion.matches ||
+    document.hidden
+  ) {
+    return;
+  }
+
+  autoTimer = setInterval(() => {
+    if (!isTransitioning) {
+      const nextIndex =
+        (current + 1) % recommendations.length;
+
+      changeQuote(nextIndex);
+    }
+  }, AUTO_INTERVAL);
+}
+
+/* =========================================
+   USER INTERACTION
+========================================= */
+
+function registerInteraction() {
+  userInteracting = true;
+
+  stopAutoCycle();
+
+  if (interactionTimer !== null) {
+    clearTimeout(interactionTimer);
+  }
+
+  interactionTimer = setTimeout(() => {
+    userInteracting = false;
+    startAutoCycle();
+  }, INTERACTION_PAUSE);
 }
 
 /* Previous recommendation */
 
 prevButton.addEventListener("click", () => {
+  registerInteraction();
 
-  current =
+  const previousIndex =
     (current - 1 + recommendations.length) %
     recommendations.length;
 
-  renderQuote();
-
+  changeQuote(previousIndex);
 });
 
 /* Next recommendation */
 
 nextButton.addEventListener("click", () => {
+  registerInteraction();
 
-  current = (current + 1) % recommendations.length;
+  const nextIndex =
+    (current + 1) % recommendations.length;
 
-  renderQuote();
-
+  changeQuote(nextIndex);
 });
 
-/* Initialise carousel */
+/* Pause while the pointer is over the card */
+
+recommendationCard.addEventListener(
+  "mouseenter",
+  () => {
+    stopAutoCycle();
+  }
+);
+
+recommendationCard.addEventListener(
+  "mouseleave",
+  () => {
+    startAutoCycle();
+  }
+);
+
+/* Pause while keyboard focus is inside */
+
+recommendationCard.addEventListener(
+  "focusin",
+  () => {
+    stopAutoCycle();
+  }
+);
+
+recommendationCard.addEventListener(
+  "focusout",
+  () => {
+    startAutoCycle();
+  }
+);
+
+/* =========================================
+   ONLY CYCLE WHEN VISIBLE
+========================================= */
+
+const carouselObserver = new IntersectionObserver(
+  (entries) => {
+    entries.forEach((entry) => {
+      carouselVisible = entry.isIntersecting;
+
+      if (carouselVisible) {
+        startAutoCycle();
+      } else {
+        stopAutoCycle();
+      }
+    });
+  },
+  {
+    threshold: 0.35
+  }
+);
+
+carouselObserver.observe(recommendationCard);
+
+/* =========================================
+   PAGE VISIBILITY
+========================================= */
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    stopAutoCycle();
+  } else {
+    startAutoCycle();
+  }
+});
+
+/* =========================================
+   ACCESSIBILITY
+========================================= */
+
+reducedMotion.addEventListener("change", () => {
+  if (reducedMotion.matches) {
+    stopAutoCycle();
+
+    clearTimeout(fadeTimer);
+
+    isTransitioning = false;
+    recommendationCard.style.opacity = "1";
+  } else {
+    startAutoCycle();
+  }
+});
+
+/* =========================================
+   INITIALISE
+========================================= */
 
 renderQuote();
