@@ -767,3 +767,54 @@ if (recommendationCard) {
 
   startAutoCycle();
 }
+
+/* =========================================
+   MOBILE MENU REPAIR
+========================================= */
+
+document.addEventListener("DOMContentLoaded", function () {
+  const menuButton = document.querySelector(".menu-toggle");
+  const menu = document.querySelector("#site-menu");
+  const closeButton = document.querySelector(".menu-close");
+
+  if (!menuButton || !menu || !closeButton) return;
+
+  // Replace the button to clear any previous click handlers.
+  const newMenuButton = menuButton.cloneNode(true);
+  menuButton.replaceWith(newMenuButton);
+
+  const newCloseButton = closeButton.cloneNode(true);
+  closeButton.replaceWith(newCloseButton);
+
+  function openNavigation() {
+    menu.hidden = false;
+    document.body.classList.add("menu-open");
+    newMenuButton.setAttribute("aria-expanded", "true");
+  }
+
+  function closeNavigation() {
+    menu.hidden = true;
+    document.body.classList.remove("menu-open");
+    newMenuButton.setAttribute("aria-expanded", "false");
+  }
+
+  newMenuButton.addEventListener("click", function () {
+    if (menu.hidden) {
+      openNavigation();
+    } else {
+      closeNavigation();
+    }
+  });
+
+  newCloseButton.addEventListener("click", closeNavigation);
+
+  menu.querySelectorAll("a").forEach(function (link) {
+    link.addEventListener("click", closeNavigation);
+  });
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && !menu.hidden) {
+      closeNavigation();
+    }
+  });
+});
