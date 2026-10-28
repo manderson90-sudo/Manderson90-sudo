@@ -1,4 +1,9 @@
 /* =========================================
+   MICHAEL ANDERSON PORTFOLIO
+   NAVIGATION + RECOMMENDATIONS
+========================================= */
+
+/* =========================================
    FULL-SCREEN NAVIGATION
 ========================================= */
 
@@ -14,7 +19,10 @@ function openMenu() {
   menu.hidden = false;
 
   menuButton.setAttribute("aria-expanded", "true");
-  menuButton.setAttribute("aria-label", "Close navigation menu");
+  menuButton.setAttribute(
+    "aria-label",
+    "Close navigation menu"
+  );
 
   document.body.classList.add("menu-open");
 
@@ -25,7 +33,10 @@ function closeMenu(restoreFocus = true) {
   menu.hidden = true;
 
   menuButton.setAttribute("aria-expanded", "false");
-  menuButton.setAttribute("aria-label", "Open navigation menu");
+  menuButton.setAttribute(
+    "aria-label",
+    "Open navigation menu"
+  );
 
   document.body.classList.remove("menu-open");
 
@@ -70,7 +81,10 @@ document.addEventListener("keydown", (event) => {
     const first = focusable[0];
     const last = focusable[focusable.length - 1];
 
-    if (event.shiftKey && document.activeElement === first) {
+    if (
+      event.shiftKey &&
+      document.activeElement === first
+    ) {
       event.preventDefault();
       last.focus();
     } else if (
@@ -84,7 +98,7 @@ document.addEventListener("keydown", (event) => {
 });
 
 /* =========================================
-   RECOMMENDATIONS
+   FIVE RECOMMENDATIONS
 ========================================= */
 
 const recommendations = [
@@ -140,17 +154,24 @@ const recommendations = [
 
 const AUTO_INTERVAL = 6000;
 const INTERACTION_PAUSE = 15000;
-const FADE_DURATION = 300;
+const FADE_DURATION = 250;
+const SWIPE_THRESHOLD = 45;
 
 let current = 0;
 
 let autoTimer = null;
-let interactionTimer = null;
-let fadeTimer = null;
+let resumeTimer = null;
+let transitionTimer = null;
+let transitionEndTimer = null;
+let resizeTimer = null;
 
-let carouselVisible = false;
 let isTransitioning = false;
-let userInteracting = false;
+let pauseUntil = 0;
+let pointerOverCard = false;
+let focusInsideCard = false;
+
+let touchStartX = 0;
+let touchStartY = 0;
 
 const recommendationCard = document.querySelector(
   ".recommendation-card"
@@ -160,9 +181,62 @@ const dots = document.querySelector("#quote-dots");
 const prevButton = document.querySelector("#prev-quote");
 const nextButton = document.querySelector("#next-quote");
 
+const quoteText = document.querySelector("#quote-text");
+
 const reducedMotion = window.matchMedia(
   "(prefers-reduced-motion: reduce)"
 );
+
+/* =========================================
+   CAROUSEL STYLING
+
+   Added automatically by JavaScript.
+   No CSS file changes required.
+========================================= */
+
+const carouselStyles = document.createElement("style");
+
+carouselStyles.textContent = `
+  .recommendation-card {
+    display: flex;
+    flex-direction: column;
+    touch-action: pan-y;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  .recommendation-card .quote-person {
+    margin-top: auto;
+  }
+
+  .recommendation-card blockquote {
+    min-height: 0;
+  }
+
+  .recommendation-card {
+    transition: opacity 250ms ease;
+  }
+
+  .recommendation-card.is-changing {
+    opacity: 0;
+  }
+
+  .recommendation-card.is-swiping {
+    cursor: grabbing;
+  }
+
+  .carousel-controls {
+    min-height: 50px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .recommendation-card {
+      transition: none !important;
+    }
+  }
+`;
+
+document.head.appendChild(carouselStyles);
 
 /* =========================================
    RENDER RECOMMENDATION
@@ -174,7 +248,7 @@ function renderQuote() {
   document.querySelector(".quote-category").textContent =
     recommendation.category;
 
-  document.querySelector("#quote-text").textContent =
+  quoteText.textContent =
     recommendation.quote;
 
   document.querySelector("#quote-name").textContent =
@@ -208,7 +282,8 @@ function renderQuote() {
       String(index === current)
     );
 
-    button.className = index === current ? "active" : "";
+    button.className =
+      index === current ? "active" : "";
 
     button.addEventListener("click", () => {
       registerInteraction();
@@ -225,35 +300,76 @@ function renderQuote() {
 }
 
 /* =========================================
-   FADE TRANSITION
+   KEEP ALL CARDS THE SAME HEIGHT
 ========================================= */
 
-recommendationCard.style.transition =
-  `opacity ${FADE_DURATION}ms ease`;
+function equaliseCardHeight() {
+  if (isTransitioning) return;
+
+  const savedIndex = current;
+
+  recommendationCard.style.minHeight = "0px";
+
+  const originalVisibility =
+    recommendationCard.style.visibility;
+
+  recommendationCard.style.visibility = "hidden";
+
+  let tallest = 0;
+
+  recommendations.forEach((_, index) => {
+    current = index;
+
+    renderQuote();
+
+    const height =
+      recommendationCard.getBoundingClientRect().height;
+
+    tallest = Math.max(tallest, height);
+  });
+
+  current = savedIndex;
+
+  renderQuote();
+
+  recommendationCard.style.minHeight =
+    `${Math.ceil(tallest)}px`;
+
+  recommendationCard.style.visibility =
+    originalVisibility;
+}
+
+/* =========================================
+   CHANGE RECOMMENDATION
+========================================= */
 
 function changeQuote(index) {
   if (isTransitioning) return;
 
-  if (index === current) return;
+  const targetIndex =
+    (index + recommendations.length) %
+    recommendations.length;
+
+  if (targetIndex === current) return;
 
   if (reducedMotion.matches) {
-    current = index;
+    current = targetIndex;
     renderQuote();
     return;
   }
 
   isTransitioning = true;
 
-  recommendationCard.style.opacity = "0";
+  recommendationCard.classList.add("is-changing");
 
-  fadeTimer = setTimeout(() => {
-    current = index;
+  transitionTimer = setTimeout(() => {
+    current = targetIndex;
 
     renderQuote();
 
-    recommendationCard.style.opacity = "1";
+    recommendationCard.classList.remove("is-changing");
 
-    fadeTimer = setTimeout(() => {
+    transitionEndTimer = setTimeout(() => {
       isTransitioning = false;
     }, FADE_DURATION);
 
@@ -271,76 +387,133 @@ function stopAutoCycle() {
   }
 }
 
+function canAutoCycle() {
+  return (
+    recommendations.length > 1 &&
+    !document.hidden &&
+    !reducedMotion.matches &&
+    menu.hidden &&
+    !pointerOverCard &&
+    !focusInsideCard &&
+    Date.now() >= pauseUntil
+  );
+}
+
 function startAutoCycle() {
   stopAutoCycle();
 
-  if (
-    recommendations.length < 2 ||
-    !carouselVisible ||
-    userInteracting ||
-    reducedMotion.matches ||
-    document.hidden
-  ) {
-    return;
-  }
+  if (!canAutoCycle()) return;
 
   autoTimer = setInterval(() => {
-    if (!isTransitioning) {
-      const nextIndex =
-        (current + 1) % recommendations.length;
+    if (!canAutoCycle()) {
+      stopAutoCycle();
+      return;
+    }
 
-      changeQuote(nextIndex);
+    if (!isTransitioning) {
+      changeQuote(current + 1);
     }
   }, AUTO_INTERVAL);
 }
 
 /* =========================================
-   USER INTERACTION
+   PAUSE AFTER USER INTERACTION
 ========================================= */
 
 function registerInteraction() {
-  userInteracting = true;
-
   stopAutoCycle();
 
-  if (interactionTimer !== null) {
-    clearTimeout(interactionTimer);
+  pauseUntil = Date.now() + INTERACTION_PAUSE;
+
+  if (resumeTimer !== null) {
+    clearTimeout(resumeTimer);
   }
 
-  interactionTimer = setTimeout(() => {
-    userInteracting = false;
+  resumeTimer = setTimeout(() => {
     startAutoCycle();
-  }, INTERACTION_PAUSE);
+  }, INTERACTION_PAUSE + 50);
 }
 
-/* Previous recommendation */
+/* =========================================
+   ARROW CONTROLS
+========================================= */
 
 prevButton.addEventListener("click", () => {
   registerInteraction();
-
-  const previousIndex =
-    (current - 1 + recommendations.length) %
-    recommendations.length;
-
-  changeQuote(previousIndex);
+  changeQuote(current - 1);
 });
-
-/* Next recommendation */
 
 nextButton.addEventListener("click", () => {
   registerInteraction();
-
-  const nextIndex =
-    (current + 1) % recommendations.length;
-
-  changeQuote(nextIndex);
+  changeQuote(current + 1);
 });
 
-/* Pause while the pointer is over the card */
+/* =========================================
+   SWIPE SUPPORT FOR IPHONE / ANDROID
+========================================= */
+
+recommendationCard.addEventListener(
+  "touchstart",
+  (event) => {
+    if (event.touches.length !== 1) return;
+
+    touchStartX = event.touches[0].clientX;
+    touchStartY = event.touches[0].clientY;
+  },
+  { passive: true }
+);
+
+recommendationCard.addEventListener(
+  "touchend",
+  (event) => {
+    if (event.changedTouches.length !== 1) return;
+
+    const touchEndX =
+      event.changedTouches[0].clientX;
+
+    const touchEndY =
+      event.changedTouches[0].clientY;
+
+    const differenceX =
+      touchEndX - touchStartX;
+
+    const differenceY =
+      touchEndY - touchStartY;
+
+    /*
+      Only treat a gesture as a swipe
+      when horizontal movement is clearly
+      greater than vertical movement.
+    */
+
+    if (
+      Math.abs(differenceX) < SWIPE_THRESHOLD ||
+      Math.abs(differenceX) <= Math.abs(differenceY)
+    ) {
+      return;
+    }
+
+    registerInteraction();
+
+    if (differenceX < 0) {
+      // Swipe left: next recommendation
+      changeQuote(current + 1);
+    } else {
+      // Swipe right: previous recommendation
+      changeQuote(current - 1);
+    }
+  },
+  { passive: true }
+);
+
+/* =========================================
+   DESKTOP MOUSE HOVER
+========================================= */
 
 recommendationCard.addEventListener(
   "mouseenter",
   () => {
+    pointerOverCard = true;
     stopAutoCycle();
   }
 );
@@ -348,76 +521,99 @@ recommendationCard.addEventListener(
 recommendationCard.addEventListener(
   "mouseleave",
   () => {
+    pointerOverCard = false;
     startAutoCycle();
   }
 );
 
-/* Pause while keyboard focus is inside */
+/* =========================================
+   KEYBOARD FOCUS
+========================================= */
 
 recommendationCard.addEventListener(
   "focusin",
   () => {
+    focusInsideCard = true;
     stopAutoCycle();
   }
 );
 
 recommendationCard.addEventListener(
   "focusout",
-  () => {
-    startAutoCycle();
+  (event) => {
+    if (
+      !recommendationCard.contains(event.relatedTarget)
+    ) {
+      focusInsideCard = false;
+      startAutoCycle();
+    }
   }
 );
-
-/* =========================================
-   ONLY CYCLE WHEN VISIBLE
-========================================= */
-
-const carouselObserver = new IntersectionObserver(
-  (entries) => {
-    entries.forEach((entry) => {
-      carouselVisible = entry.isIntersecting;
-
-      if (carouselVisible) {
-        startAutoCycle();
-      } else {
-        stopAutoCycle();
-      }
-    });
-  },
-  {
-    threshold: 0.35
-  }
-);
-
-carouselObserver.observe(recommendationCard);
 
 /* =========================================
    PAGE VISIBILITY
 ========================================= */
 
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden) {
-    stopAutoCycle();
-  } else {
-    startAutoCycle();
+document.addEventListener(
+  "visibilitychange",
+  () => {
+    if (document.hidden) {
+      stopAutoCycle();
+    } else {
+      startAutoCycle();
+    }
   }
-});
+);
 
 /* =========================================
-   ACCESSIBILITY
+   REDUCED MOTION
 ========================================= */
 
-reducedMotion.addEventListener("change", () => {
+function handleMotionPreference() {
   if (reducedMotion.matches) {
     stopAutoCycle();
 
-    clearTimeout(fadeTimer);
+    clearTimeout(transitionTimer);
+    clearTimeout(transitionEndTimer);
 
     isTransitioning = false;
-    recommendationCard.style.opacity = "1";
+
+    recommendationCard.classList.remove(
+      "is-changing"
+    );
   } else {
     startAutoCycle();
   }
+}
+
+if (reducedMotion.addEventListener) {
+  reducedMotion.addEventListener(
+    "change",
+    handleMotionPreference
+  );
+} else {
+  reducedMotion.addListener(
+    handleMotionPreference
+  );
+}
+
+/* =========================================
+   RECALCULATE HEIGHT WHEN SCREEN RESIZES
+========================================= */
+
+window.addEventListener("resize", () => {
+  clearTimeout(resizeTimer);
+
+  resizeTimer = setTimeout(() => {
+    if (isTransitioning) {
+      resizeTimer = setTimeout(
+        equaliseCardHeight,
+        FADE_DURATION * 2 + 100
+      );
+    } else {
+      equaliseCardHeight();
+    }
+  }, 200);
 });
 
 /* =========================================
@@ -425,3 +621,15 @@ reducedMotion.addEventListener("change", () => {
 ========================================= */
 
 renderQuote();
+
+if (document.fonts && document.fonts.ready) {
+  document.fonts.ready.then(() => {
+    equaliseCardHeight();
+  });
+} else {
+  equaliseCardHeight();
+}
+
+window.addEventListener("load", equaliseCardHeight);
+
+startAutoCycle();
