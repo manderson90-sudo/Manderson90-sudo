@@ -12,6 +12,7 @@ function openMenu() {
   previousFocus = document.activeElement;
 
   menu.hidden = false;
+
   menuButton.setAttribute("aria-expanded", "true");
   menuButton.setAttribute("aria-label", "Close navigation menu");
 
@@ -45,15 +46,11 @@ closeButton.addEventListener("click", () => {
   closeMenu();
 });
 
-/* Close menu when a navigation link is selected */
-
 menu.querySelectorAll("a").forEach((link) => {
   link.addEventListener("click", () => {
     closeMenu(false);
   });
 });
-
-/* Close menu using Escape */
 
 document.addEventListener("keydown", (event) => {
   if (menu.hidden) return;
@@ -62,8 +59,6 @@ document.addEventListener("keydown", (event) => {
     closeMenu();
     return;
   }
-
-  /* Keep keyboard focus inside the open menu */
 
   if (event.key === "Tab") {
     const focusable = Array.from(
@@ -89,16 +84,11 @@ document.addEventListener("keydown", (event) => {
 });
 
 /* =========================================
-   LINKEDIN RECOMMENDATIONS
+   RECOMMENDATIONS CAROUSEL
 ========================================= */
 
-/*
-  Additional recommendations can be added
-  once their exact wording and attribution
-  have been confirmed.
-*/
-
 const recommendations = [
+
   {
     category: "TECHNOLOGY LEADERSHIP",
     quote:
@@ -106,8 +96,49 @@ const recommendations = [
     name: "Daniel Bailey",
     role: "Head of Technology, Newcastle United Football Club",
     relationship: "Former direct manager"
+  },
+
+  {
+    category: "PEOPLE LEADERSHIP",
+    quote:
+      "What really sets Michael apart is his leadership style; he is highly personable and emotionally intelligent, and adapts his approach to suit the needs of different direct reports.",
+    name: "Rachel Wilson",
+    role: "IT Applications & Digital Development Manager, Newcastle United Football Club",
+    relationship: "Former direct report"
+  },
+
+  {
+    category: "COMMERCIAL LEADERSHIP",
+    quote:
+      "Michael is one of the most professional, detailed and well communicated people I have ever worked with in over 23 years and he would be a very valued team member in any business no matter what the industry.",
+    name: "Martin Robinson",
+    role: "Executive Leader, Golf, Leisure & Hospitality",
+    relationship: "Former colleague"
+  },
+
+  {
+    category: "RELATIONSHIPS & COLLABORATION",
+    quote:
+      "His technical knowledge is outstanding, as is his ability to build effective relationships that support proactive, collaborative delivery.",
+    name: "Steve Swinyard",
+    role: "Head of Safeguarding & Welfare, Newcastle United Football Club",
+    relationship: "Former senior colleague"
+  },
+
+  {
+    category: "PROJECT DELIVERY",
+    quote:
+      "During our time together at American Golf he managed a number of successful projects with tenacity, professionalism, courtesy and a solution-focused approach.",
+    name: "Scott Taylor",
+    role: "Marketing & CRM Director, American Golf",
+    relationship: "Former senior colleague"
   }
+
 ];
+
+/* =========================================
+   CAROUSEL FUNCTIONALITY
+========================================= */
 
 let current = 0;
 
@@ -116,6 +147,7 @@ const prevButton = document.querySelector("#prev-quote");
 const nextButton = document.querySelector("#next-quote");
 
 function renderQuote() {
+
   const recommendation = recommendations[current];
 
   document.querySelector(".quote-category").textContent =
@@ -140,9 +172,8 @@ function renderQuote() {
       .slice(0, 2)
       .join("");
 
-  /* Create carousel position indicators */
-
   const indicators = recommendations.map((_, index) => {
+
     const button = document.createElement("button");
 
     button.type = "button";
@@ -150,6 +181,11 @@ function renderQuote() {
     button.setAttribute(
       "aria-label",
       `Show recommendation ${index + 1}`
+    );
+
+    button.setAttribute(
+      "aria-pressed",
+      String(index === current)
     );
 
     button.className =
@@ -161,34 +197,38 @@ function renderQuote() {
     });
 
     return button;
+
   });
 
   dots.replaceChildren(...indicators);
 
-  /* Disable arrows when only one recommendation exists */
-
   prevButton.disabled = recommendations.length < 2;
   nextButton.disabled = recommendations.length < 2;
+
 }
 
 /* Previous recommendation */
 
 prevButton.addEventListener("click", () => {
+
   current =
     (current - 1 + recommendations.length) %
     recommendations.length;
 
   renderQuote();
+
 });
 
 /* Next recommendation */
 
 nextButton.addEventListener("click", () => {
+
   current = (current + 1) % recommendations.length;
 
   renderQuote();
+
 });
 
-/* Initialise recommendations */
+/* Initialise carousel */
 
 renderQuote();
