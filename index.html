@@ -24,7 +24,7 @@
 <body>
 
   <!-- =====================================
-       HEADER AND NAVIGATION
+       HEADER
   ====================================== -->
 
   <header class="site-header">
@@ -77,80 +77,86 @@
 
     <div class="header-line"></div>
 
-    <!-- Full-screen mobile navigation -->
+  </header>
 
-    <nav
-      id="site-menu"
-      class="site-menu"
-      aria-label="Main navigation"
-      hidden
-    >
 
-      <div class="menu-inner">
+  <!-- =====================================
+       FULL-SCREEN NAVIGATION
 
-        <div class="menu-top">
+       Positioned outside the sticky header
+       for reliable mobile behaviour.
+  ====================================== -->
 
-          <span class="menu-heading">INDEX</span>
+  <nav
+    id="site-menu"
+    class="site-menu"
+    aria-label="Main navigation"
+    hidden
+  >
 
-          <button
-            class="menu-close"
-            type="button"
-            aria-label="Close navigation menu"
-          >
-            <span aria-hidden="true">×</span>
-          </button>
+    <div class="menu-inner">
 
-        </div>
+      <div class="menu-top">
 
-        <div class="menu-links">
+        <span class="menu-heading">INDEX</span>
 
-          <a href="#home">
-            <span>Home</span>
-            <span class="menu-number">01</span>
-          </a>
-
-          <a href="#about">
-            <span>About</span>
-            <span class="menu-number">02</span>
-          </a>
-
-          <a href="#experience">
-            <span>Experience</span>
-            <span class="menu-number">03</span>
-          </a>
-
-          <a href="#achievements">
-            <span>Achievements</span>
-            <span class="menu-number">04</span>
-          </a>
-
-          <a href="#qualifications">
-            <span>Qualifications</span>
-            <span class="menu-number">05</span>
-          </a>
-
-          <a href="#leadership">
-            <span>Leadership</span>
-            <span class="menu-number">06</span>
-          </a>
-
-          <a href="#recommendations">
-            <span>Recommendations</span>
-            <span class="menu-number">07</span>
-          </a>
-
-          <a href="#contact">
-            <span>Contact</span>
-            <span class="menu-number">08</span>
-          </a>
-
-        </div>
+        <button
+          class="menu-close"
+          type="button"
+          aria-label="Close navigation menu"
+        >
+          <span aria-hidden="true">×</span>
+        </button>
 
       </div>
 
-    </nav>
+      <div class="menu-links">
 
-  </header>
+        <a href="#home">
+          <span>Home</span>
+          <span class="menu-number">01</span>
+        </a>
+
+        <a href="#about">
+          <span>About</span>
+          <span class="menu-number">02</span>
+        </a>
+
+        <a href="#experience">
+          <span>Experience</span>
+          <span class="menu-number">03</span>
+        </a>
+
+        <a href="#achievements">
+          <span>Achievements</span>
+          <span class="menu-number">04</span>
+        </a>
+
+        <a href="#qualifications">
+          <span>Qualifications</span>
+          <span class="menu-number">05</span>
+        </a>
+
+        <a href="#leadership">
+          <span>Leadership</span>
+          <span class="menu-number">06</span>
+        </a>
+
+        <a href="#recommendations">
+          <span>Recommendations</span>
+          <span class="menu-number">07</span>
+        </a>
+
+        <a href="#contact">
+          <span>Contact</span>
+          <span class="menu-number">08</span>
+        </a>
+
+      </div>
+
+    </div>
+
+  </nav>
 
 
   <main>
@@ -299,6 +305,9 @@
 
     <!-- =====================================
          EXPERIENCE
+
+         Expandable career entries.
+         Uses native HTML details elements.
     ====================================== -->
 
     <section id="experience" class="section experience-section">
@@ -323,117 +332,305 @@
 
         <div class="experience-list">
 
-          <article class="experience-item">
+          <!-- NEWCASTLE BUILDING SOCIETY -->
 
-            <div class="experience-date">
-              2026 — PRESENT
-            </div>
+          <details class="experience-item">
 
-            <div class="experience-content">
+            <summary class="experience-summary">
 
-              <h3>Technology Performance Manager</h3>
+              <span class="experience-date">
+                2026 — PRESENT
+              </span>
 
-              <p class="experience-company">
-                Newcastle Building Society Group
-              </p>
+              <span class="experience-content">
 
-              <p>
-                Supporting technology performance,
-                governance, supplier management
-                and commercial accountability within
-                a regulated financial services
-                environment.
-              </p>
+                <span class="experience-title">
+                  Technology Performance Manager
+                </span>
 
-            </div>
+                <span class="experience-company">
+                  Newcastle Building Society Group
+                </span>
 
-          </article>
+                <span class="experience-preview">
+                  Supporting technology performance,
+                  governance, supplier management and
+                  commercial accountability within a
+                  regulated financial services environment.
+                </span>
 
+              </span>
 
-          <article class="experience-item">
+              <span
+                class="experience-expand-icon"
+                aria-hidden="true"
+              ></span>
 
-            <div class="experience-date">
-              2023 — 2026
-            </div>
+            </summary>
 
-            <div class="experience-content">
-
-              <h3>
-                IT Applications &amp; Digital Development Manager
-              </h3>
-
-              <p class="experience-company">
-                Newcastle United Football Club
-              </p>
+            <div class="experience-expanded">
 
               <p>
-                Established and led the Applications
-                &amp; Digital Development function,
-                overseeing a broad application portfolio,
-                improving governance and introducing
-                digital capabilities to support the club.
+                Working across technology performance,
+                governance, supplier relationships and
+                financial accountability to support
+                effective decision-making and demonstrate
+                the value delivered by technology.
               </p>
+
+              <ul>
+                <li>
+                  Technology performance measurement
+                  and reporting.
+                </li>
+
+                <li>
+                  Supplier performance and
+                  commercial governance.
+                </li>
+
+                <li>
+                  Technology financial management
+                  and accountability.
+                </li>
+
+                <li>
+                  Cross-functional collaboration
+                  and continuous improvement.
+                </li>
+              </ul>
 
             </div>
 
-          </article>
+          </details>
 
 
-          <article class="experience-item">
+          <!-- NEWCASTLE UNITED -->
 
-            <div class="experience-date">
-              2018 — 2023
-            </div>
+          <details class="experience-item">
 
-            <div class="experience-content">
+            <summary class="experience-summary">
 
-              <h3>
-                Systems &amp; Process Management
-              </h3>
+              <span class="experience-date">
+                2023 — 2026
+              </span>
 
-              <p class="experience-company">
-                American Golf
-              </p>
+              <span class="experience-content">
+
+                <span class="experience-title">
+                  IT Applications &amp; Digital Development Manager
+                </span>
+
+                <span class="experience-company">
+                  Newcastle United Football Club
+                </span>
+
+                <span class="experience-preview">
+                  Established and led the Applications
+                  &amp; Digital Development function,
+                  overseeing a broad application portfolio,
+                  improving governance and introducing
+                  digital capabilities to support the club.
+                </span>
+
+              </span>
+
+              <span
+                class="experience-expand-icon"
+                aria-hidden="true"
+              ></span>
+
+            </summary>
+
+            <div class="experience-expanded">
 
               <p>
-                Delivered technology and operational
-                improvement initiatives, supporting
-                systems, processes and commercial
-                performance across a national retail
-                business.
+                Built and led the Applications &amp;
+                Digital Development function, introducing
+                structure, governance and digital
+                capabilities across a fast-moving
+                professional sporting organisation.
               </p>
+
+              <ul>
+                <li>
+                  Managed a portfolio of more than
+                  200 applications.
+                </li>
+
+                <li>
+                  Established application ownership,
+                  governance and service documentation.
+                </li>
+
+                <li>
+                  Supported Microsoft 365, Copilot
+                  and digital adoption initiatives.
+                </li>
+
+                <li>
+                  Strengthened supplier relationships
+                  and commercial oversight.
+                </li>
+
+                <li>
+                  Improved technology visibility
+                  and reduced shadow IT.
+                </li>
+
+                <li>
+                  Developed and supported a dedicated
+                  Applications &amp; Digital Development team.
+                </li>
+              </ul>
 
             </div>
 
-          </article>
+          </details>
 
 
-          <article class="experience-item">
+          <!-- AMERICAN GOLF -->
 
-            <div class="experience-date">
-              EARLIER CAREER
-            </div>
+          <details class="experience-item">
 
-            <div class="experience-content">
+            <summary class="experience-summary">
 
-              <h3>
-                Retail &amp; Operational Leadership
-              </h3>
+              <span class="experience-date">
+                2018 — 2023
+              </span>
 
-              <p class="experience-company">
-                Apple / Stormfront · Maplin · Comet
-              </p>
+              <span class="experience-content">
+
+                <span class="experience-title">
+                  Systems &amp; Process Management
+                </span>
+
+                <span class="experience-company">
+                  American Golf
+                </span>
+
+                <span class="experience-preview">
+                  Delivered technology and operational
+                  improvement initiatives, supporting
+                  systems, processes and commercial
+                  performance across a national
+                  retail business.
+                </span>
+
+              </span>
+
+              <span
+                class="experience-expand-icon"
+                aria-hidden="true"
+              ></span>
+
+            </summary>
+
+            <div class="experience-expanded">
 
               <p>
-                Developed a strong foundation in
-                commercial management, customer
-                experience, operational delivery
-                and people leadership.
+                Supported operational transformation
+                through improved business systems,
+                processes and technology delivery.
               </p>
+
+              <ul>
+                <li>
+                  Led systems and process
+                  improvement initiatives.
+                </li>
+
+                <li>
+                  Managed technology-related projects
+                  and supplier relationships.
+                </li>
+
+                <li>
+                  Supported operational efficiency
+                  across retail operations.
+                </li>
+
+                <li>
+                  Worked with commercial and operational
+                  teams to deliver practical improvements.
+                </li>
+              </ul>
 
             </div>
 
-          </article>
+          </details>
+
+
+          <!-- EARLIER CAREER -->
+
+          <details class="experience-item">
+
+            <summary class="experience-summary">
+
+              <span class="experience-date">
+                EARLIER CAREER
+              </span>
+
+              <span class="experience-content">
+
+                <span class="experience-title">
+                  Retail &amp; Operational Leadership
+                </span>
+
+                <span class="experience-company">
+                  Apple / Stormfront · Maplin · Comet
+                </span>
+
+                <span class="experience-preview">
+                  Developed a strong foundation in
+                  commercial management, customer
+                  experience, operational delivery
+                  and people leadership.
+                </span>
+
+              </span>
+
+              <span
+                class="experience-expand-icon"
+                aria-hidden="true"
+              ></span>
+
+            </summary>
+
+            <div class="experience-expanded">
+
+              <p>
+                Developed leadership and commercial
+                management experience through
+                customer-facing and operational
+                management roles.
+              </p>
+
+              <ul>
+                <li>
+                  Retail operations and
+                  performance management.
+                </li>
+
+                <li>
+                  People development, coaching
+                  and leadership.
+                </li>
+
+                <li>
+                  Customer experience and
+                  commercial delivery.
+                </li>
+
+                <li>
+                  Process improvement and
+                  operational accountability.
+                </li>
+              </ul>
+
+            </div>
+
+          </details>
 
         </div>
 
@@ -899,8 +1096,6 @@
             </a>
 
           </div>
-
-          <!-- NEW: EMAIL ADDRESS -->
 
           <div class="contact-email">
 
