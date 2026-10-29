@@ -1531,15 +1531,22 @@ img {
   flex-direction: column;
 }
 
+.qualification-card {
+  display: flex;
+  flex-direction: column;
+}
+
 .credential-link {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   align-self: flex-start;
   margin-top: auto;
-  padding-top: 20px;
+  padding-top: 16px;
   font-size: 13px;
   font-weight: 600;
+  line-height: 1.4;
+  color: #5b8cff;
   text-decoration: none;
-  color: var(--accent, #2563eb);
   transition: opacity 0.2s ease;
 }
 
