@@ -1666,3 +1666,208 @@ main > section {
   }
 
 }
+
+/* =========================================
+   EXPERIENCE LAYOUT FIX
+   Desktop, tablet and mobile
+========================================= */
+
+/* Override previous experience grid layouts */
+
+.experience-list .experience-item {
+  display: block !important;
+  width: 100%;
+  padding: 0 !important;
+  margin: 0;
+  border-bottom: 1px solid #202c3b;
+}
+
+/* Each experience entry */
+
+.experience-list .experience-summary {
+  display: grid !important;
+  grid-template-columns: 190px minmax(0, 1fr) 36px !important;
+  align-items: start;
+  gap: 28px;
+  width: 100%;
+  padding: 32px 0;
+  list-style: none;
+  cursor: pointer;
+}
+
+/* Remove browser's default arrow */
+
+.experience-summary::-webkit-details-marker {
+  display: none;
+}
+
+.experience-summary::marker {
+  content: "";
+}
+
+/* Date column */
+
+.experience-summary .experience-date {
+  display: block !important;
+  grid-column: 1;
+  width: auto !important;
+  margin: 0;
+  padding: 5px 0 0 !important;
+  white-space: normal;
+}
+
+/* Main content column */
+
+.experience-summary .experience-content {
+  display: flex !important;
+  flex-direction: column !important;
+  grid-column: 2;
+  min-width: 0;
+  width: 100%;
+  gap: 0;
+  padding: 0 !important;
+}
+
+/* Job title */
+
+.experience-summary .experience-title {
+  display: block;
+  margin: 0 0 8px;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.4;
+  color: #f1f3f6;
+}
+
+/* Company */
+
+.experience-summary .experience-company {
+  display: block;
+  margin: 0 0 12px;
+  color: #6da8ff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Description */
+
+.experience-summary .experience-preview {
+  display: block;
+  width: 100%;
+  max-width: 750px;
+  margin: 0;
+  color: #aab6c6;
+  font-size: 15px;
+  line-height: 1.8;
+}
+
+/* Expand icon */
+
+.experience-summary .experience-expand-icon {
+  grid-column: 3;
+  grid-row: 1;
+  margin-top: 3px;
+}
+
+/* Expanded information must sit underneath */
+
+.experience-list .experience-expanded {
+  display: block !important;
+  width: auto !important;
+  max-width: none !important;
+  margin: 0 36px 28px 218px !important;
+  padding: 24px 28px !important;
+  box-sizing: border-box;
+  background: rgba(13, 27, 46, 0.7);
+  border: 1px solid #202c3b;
+  border-radius: 12px;
+}
+
+.experience-list .experience-expanded p {
+  margin: 0 0 18px;
+  line-height: 1.8;
+}
+
+.experience-list .experience-expanded ul {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.experience-list .experience-expanded li {
+  margin-bottom: 10px;
+  line-height: 1.7;
+}
+
+/* =========================================
+   MOBILE EXPERIENCE LAYOUT
+========================================= */
+
+@media (max-width: 700px) {
+
+  .experience-list .experience-summary {
+    grid-template-columns: minmax(0, 1fr) 36px !important;
+    gap: 12px;
+    padding: 26px 0;
+  }
+
+  /* Date gets its own row */
+
+  .experience-summary .experience-date {
+    grid-column: 1 / -1;
+    grid-row: 1;
+    padding: 0 !important;
+    margin-bottom: 4px;
+  }
+
+  /* Job information uses full available width */
+
+  .experience-summary .experience-content {
+    grid-column: 1;
+    grid-row: 2;
+    width: 100%;
+  }
+
+  .experience-summary .experience-title {
+    font-size: 20px;
+  }
+
+  .experience-summary .experience-preview {
+    font-size: 14px;
+    line-height: 1.75;
+  }
+
+  /* Expand icon alongside title */
+
+  .experience-summary .experience-expand-icon {
+    grid-column: 2;
+    grid-row: 2;
+    margin-top: 0;
+  }
+
+  /* Expanded content fills available width */
+
+  .experience-list .experience-expanded {
+    margin: 0 0 24px !important;
+    padding: 20px !important;
+    width: 100% !important;
+    font-size: 14px;
+  }
+
+}
+
+/* =========================================
+   TABLET EXPERIENCE LAYOUT
+========================================= */
+
+@media (min-width: 701px) and (max-width: 1000px) {
+
+  .experience-list .experience-summary {
+    grid-template-columns: 155px minmax(0, 1fr) 36px !important;
+    gap: 20px;
+  }
+
+  .experience-list .experience-expanded {
+    margin-left: 175px !important;
+  }
+
+}
